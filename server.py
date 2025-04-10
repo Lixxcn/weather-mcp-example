@@ -1,6 +1,7 @@
 import json
 import httpx
 import os
+import sys
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
@@ -35,10 +36,14 @@ async def fetch_weather(city: str) -> dict[str, Any] | None:
             response = await client.get(OPENWEATHER_API_BASE, params=params,
                                       headers=headers, timeout=30.0)
             response.raise_for_status()
+            # 使用stderr输出日志，这样不会干扰MCP通信
+            # print(f"\n\nAPI Response: {response.json()}", file=sys.stderr, flush=True)
             return response.json()  # 返回字典类型
         except httpx.HTTPStatusError as e:
+            print(f"\n\nHTTP Error: {e.response.status_code}", file=sys.stderr, flush=True)
             return {"error": f"HTTP 错误: {e.response.status_code}"}
         except Exception as e:
+            print(f"\n\nRequest Failed: {str(e)}", file=sys.stderr, flush=True)
             return {"error": f"请求失败: {str(e)}"}
 
 def format_weather(data: dict[str, Any] | str) -> str:
